@@ -198,6 +198,7 @@ Public Class CashCountClass
     End Sub
 
     Public Shared Sub jmlh_selisih_brankas()
+        Dim makanan = Tarik_SelisihBrankas()
         Dim DataGabungan = 0 'Ini didapatkan dari FAD
         Try
             Using connection As MySqlConnection = MasterMcon.Clone()
@@ -415,5 +416,112 @@ Public Class CashCountClass
         f.ShowDialog()
         stationsSended.Remove("Brankas")
     End Sub
+
+    Public Class Selisih_Brankas
+        Public Property gudang As String
+        Public Property toko As String
+        Public Property tgl_sls As Date
+        Public Property shift As String
+        Public Property station As String
+        Public Property amount As Double
+        Public Property tgl_aprv As Date
+        Public Property tgl_ptg As Date
+        Public Property no_doc As String
+
+    End Class
+
+    Public Shared Function Tarik_SelisihBrankas() As Integer
+        Dim objcon As MySqlConnection
+        Dim objcmd As MySqlCommand
+        Dim objrd As MySqlDataReader
+        Dim sql As String = ""
+        Dim nHasil As Integer = 0
+        Dim result As String = ""
+
+        Try
+            objcon = MasterMcon.Clone()
+
+            If objcon.State = ConnectionState.Closed Then
+                objcon.Open()
+            End If
+
+            objcmd = New MySqlCommand("", objcon)
+
+            objcmd.CommandText = "SHOW TABLES LIKE 'SELISIH_BRANKAS'; "
+            If objcmd.ExecuteScalar = "" Then
+                objcmd.CommandText = "CREATE TABLE IF NOT EXISTS SELISIH_BRANKAS ("
+                objcmd.CommandText &= " `Gudang` varchar(5) NOT NULL Default '', "
+                objcmd.CommandText &= " `Toko` varchar(4) NOT NULL Default '', "
+                objcmd.CommandText &= " `Tgl_sls` date Default '0001-01-01', "
+                objcmd.CommandText &= " `Shift` varchar(2) Default NULL, "
+                objcmd.CommandText &= " `Station` varchar(2) Default NULL, "
+                objcmd.CommandText &= " `Amount` int(20) Default 0, "
+                objcmd.CommandText &= " `Tgl_aprv` date Default '0001-01-01', "
+                objcmd.CommandText &= " `Tgl_ptg` date Default '0001-01-01', "
+                objcmd.CommandText &= " `No_doc` varchar(50) Default NULL "
+                objcmd.CommandText &= ") ENGINE=InnoDB Default CHARSET=latin1 "
+                objcmd.ExecuteNonQuery()
+            End If
+
+            objcmd.CommandText = "TRUNCATE selisih_brankas; "
+            objcmd.ExecuteNonQuery()
+
+            objcmd.CommandText = "SELECT kdtk FROM toko"
+            Dim toko As String = objcmd.ExecuteScalar()
+            Dim Task As IDM.Persediaan_Toko.result
+            Dim jArray As Newtonsoft.Json.Linq.JArray
+            Dim dataSB As Selisih_Brankas
+
+            Task = IDM.Persediaan_Toko.GetTask("T5C7", "SELISIH_BRANKAS", "WARALABA", "P_TOKO", "IDM.Fungsi", "gzip")
+
+            If Task.status <> 200 Then
+                MsgBox("Data selisih brankas kosong! Response : " & Task.message)
+                Exit Function
+            End If
+
+            If Task.data.Count = 0 Then
+                MsgBox("Data kosong!")
+                Exit Function
+            End If
+
+            For Each data As IDM.Persediaan_Toko.TaskData In Task.data
+                jArray = Newtonsoft.Json.JsonConvert.DeserializeObject(Of Newtonsoft.Json.Linq.JArray)(data.task_data)
+                '[{"gudang": "G116","toko": "THXL","tgl_sls": "29-SEP-22","shift": "0","station": "0",
+                '"amount": "33000","tgl_aprv": "01-OCT-22","tgl_ptg": "29-SEP-22","no_doc": "0106/THXL/SB/IDM/01/23"}]
+
+                For i As Integer = 0 To jArray.Count - 1
+                    dataSB = Newtonsoft.Json.JsonConvert.DeserializeObject(Of Selisih_Brankas)(jArray(i).ToString)
+
+                    objcmd.CommandText = " INSERT IGNORE INTO selisih_brankas (gudang, toko, tgl_sls, shift, station, amount, tgl_aprv, tgl_ptg, no_doc) VALUES ("
+                    objcmd.CommandText &= "'" & dataSB.gudang & "', "
+                    objcmd.CommandText &= "'" & dataSB.toko & "', "
+                    objcmd.CommandText &= "'" & Format(dataSB.tgl_sls, "yyyy-MM-dd") & "', "
+                    objcmd.CommandText &= "'" & dataSB.shift & "', "
+                    objcmd.CommandText &= "'" & dataSB.station & "', "
+                    objcmd.CommandText &= "" & dataSB.amount & ", "
+                    objcmd.CommandText &= "'" & Format(dataSB.tgl_aprv, "yyyy-MM-dd") & "', "
+                    objcmd.CommandText &= "'" & Format(dataSB.tgl_ptg, "yyyy-MM-dd") & "', "
+                    objcmd.CommandText &= "'" & dataSB.no_doc & "'); "
+                    objcmd.ExecuteNonQuery()
+                Next
+            Next
+
+            'ambil tgl SO terakhir 
+            objcmd.CommandText = "Select period from const where rkey = 'SO1';"
+            Dim tanggal_so As Date = objcmd.ExecuteScalar
+
+            objcmd.CommandText = "SELECT IFNULL(SUM(amount),0)  FROM selisih_brankas "
+            objcmd.CommandText &= " WHERE tgl_sls BETWEEN ((SELECT PERIOD1 FROM const WHERE rkey='SO1') + INTERVAL 1 DAY) AND CURDATE();"
+            nHasil = CInt(objcmd.ExecuteScalar)
+
+
+        Catch ex As Exception
+            Throw New Exception(ex.Message)
+        End Try
+
+        Return nHasil
+    End Function
+
+
 
 End Class

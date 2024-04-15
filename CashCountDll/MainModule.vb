@@ -4,17 +4,17 @@ Imports CashCountDll.CashCountClass
 
 
 Module MainModule
+ 
     Public MasterMcon As MySqlConnection
-    Public isSector As Boolean = False
-    'Friend a As New IDM.Sector
-    Friend MyKey As String = "87DA9849E091A7540D77AD4E67EF9F2A"
-
-    Public  Sub Main()
+    Public isSector As Boolean = True
+    Friend a As New IDM.Sector
+    Friend MyKey As String = "0C569782377CC6CD61B07C6869C1DC09"
+    Public Sub Main()
         Try
             If isSector Then
-                'MasterMcon = a.GetVersionV2(MyKey, Application.StartupPath & "\SoPenangananKhusus.exe", "kasir")
+                MasterMcon = a.GetVersionV2(MyKey, Application.StartupPath & "\CashCountDll.exe", "kasir")
             Else
-                MasterMcon = New MySqlConnection("server=localhost;user id=root;Password=$d3@pr15mata;port=3306;database=pos;Allow User Variables=True;")
+                'MasterMcon = New MySqlConnection("server=localhost;user id=root;Password=$d3@pr15mata;port=3306;database=pos;Allow User Variables=True;")
             End If
             ' Check if the connection is open before proceeding
             'fingerpintResult = Panggil_CekFingerprintV3("Proses BA", "SO Penanganan Khusus 2") '12/20/2023 -> berubah ke so p. k. 2
@@ -44,6 +44,8 @@ Module MainModule
             MsgBox(ex.Message)
         End Try
     End Sub
+
+
 
 
 

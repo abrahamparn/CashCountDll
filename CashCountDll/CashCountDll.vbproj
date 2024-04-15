@@ -23,7 +23,7 @@
     <DebugType>full</DebugType>
     <DefineDebug>true</DefineDebug>
     <DefineTrace>true</DefineTrace>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>D:\Backoff\</OutputPath>
     <DocumentationFile>CashCountDll.xml</DocumentationFile>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
   </PropertyGroup>
@@ -53,12 +53,19 @@
     <Reference Include="IDM.Fungsi">
       <HintPath>D:\Backoff\IDM.Fungsi.dll</HintPath>
     </Reference>
+    <Reference Include="IDM.InfoToko, Version=2.0.9.1, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>D:\Backoff\DLL_TICKETING\IDM.InfoToko.dll</HintPath>
+    </Reference>
     <Reference Include="IDM.MySQL">
       <HintPath>D:\Backoff\IDM.MySQL.dll</HintPath>
     </Reference>
     <Reference Include="IDM.Sector, Version=2.0.1.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>D:\Backoff\IDM.Sector.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.13.0.3\lib\net20\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="PosUtil">
       <HintPath>D:\Backoff\PosUtil.dll</HintPath>
@@ -149,6 +156,7 @@
       <LastGenOutput>Settings.Designer.vb</LastGenOutput>
     </None>
     <None Include="App.config" />
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
 </Project>
