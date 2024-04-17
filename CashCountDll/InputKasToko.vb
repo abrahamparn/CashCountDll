@@ -1,4 +1,5 @@
-﻿Imports MySql.Data.MySqlClient
+﻿Imports System.Globalization
+Imports MySql.Data.MySqlClient
 
 Public Class InputKasToko
     Dim jumlahStation = 0
@@ -68,7 +69,7 @@ Public Class InputKasToko
                 Exit Sub
             End If
 
-            dgv_kas_station.Rows.Add(stationsBrought(jumlahStation), input)
+            dgv_kas_station.Rows.Add(stationsBrought(jumlahStation), FormatIndonesianCurrency(Integer.Parse(input)))
             jumlahStation = jumlahStation + 1
             Station_label.Text = $"Station {stationsBrought(jumlahStation)}"
             kas_text_box.Clear()
@@ -94,7 +95,7 @@ Public Class InputKasToko
                 Exit Sub
             End If
 
-            dgv_kas_station.Rows.Add(stationsBrought(jumlahStation), input)
+            dgv_kas_station.Rows.Add(stationsBrought(jumlahStation), FormatIndonesianCurrency(Integer.Parse(input)))
             jumlahStation = jumlahStation + 1
             Station_label.Text = $"Station penuh"
             kas_text_box.Clear()
@@ -143,9 +144,9 @@ Public Class InputKasToko
 
                     For Each row As DataGridViewRow In dgv_kas_station.Rows
                         Dim station As String = row.Cells(0).Value.ToString()
-                        command.CommandText = $"UPDATE CashCountOutput set jmlh_dana_kas_awal_kasir = {Convert.ToInt32(row.Cells(1).Value)} where stationid = '{row.Cells(0).Value.ToString()}'"
+                        command.CommandText = $"UPDATE CashCountOutput set jmlh_dana_kas_awal_kasir = {Convert.ToInt32(UnformatIndonesianCurrency(row.Cells(1).Value))} where stationid = '{row.Cells(0).Value.ToString()}'"
                         command.ExecuteNonQuery()
-                        totalCashDiStation = totalCashDiStation + Convert.ToInt32(row.Cells(1).Value)
+                        totalCashDiStation = totalCashDiStation + Convert.ToInt32(UnformatIndonesianCurrency(row.Cells(1).Value))
                     Next
 
                     Dim jumlahKasAwalDariSD6 = 5000000 'ini mohon diubah nanti ya
@@ -162,6 +163,51 @@ Public Class InputKasToko
             Throw New Exception(ex.Message)
         End Try
 
-        Me.Close()
+        userClosing = True ' Set the flag to indicate programmatic closure
+        Me.Close() ' Close the form
+    End Sub
+
+    Public Function FormatIndonesianCurrency(value As Integer) As String
+        Dim cultureInfo As CultureInfo = CultureInfo.CreateSpecificCulture("id-ID")
+        Dim numberFormat As NumberFormatInfo = cultureInfo.NumberFormat
+
+        ' Customize number format
+        numberFormat.CurrencyDecimalSeparator = ","
+        numberFormat.CurrencyGroupSeparator = "."
+        numberFormat.CurrencySymbol = "" ' Remove currency symbol if you don't want "Rp" prefix
+
+        ' Format the number as currency
+        Return value.ToString("N0", numberFormat)
+    End Function
+
+    Public Function UnformatIndonesianCurrency(formattedValue As String) As Integer
+        ' Remove any currency formatting, focusing on Indonesian currency specifics
+        ' where "." is the thousand separator and "," might be used for decimal parts.
+        Dim numericString As String = formattedValue.Replace(".", "").Replace(",", "")
+
+        ' Convert the cleaned-up string back to an integer.
+        Dim result As Integer
+        If Integer.TryParse(numericString, result) Then
+            Return result
+        Else
+            Throw New FormatException("Input string is not in a correct format.")
+        End If
+    End Function
+
+
+    Private userClosing As Boolean = False
+
+    Private Sub InputKasToko_FormClosing(sender As Object, e As FormClosingEventArgs) Handles MyBase.FormClosing
+        If e.CloseReason = CloseReason.UserClosing Then
+            If Not userClosing Then
+                If MessageBox.Show("Are you sure you want to exit the application?", "Exit Application", MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.Yes Then
+                    userClosing = True ' The user has confirmed they want to exit
+                    Application.Exit()
+                Else
+                    e.Cancel = True ' Prevent the form from closing
+                    userClosing = False ' Reset the flag as the closure was canceled
+                End If
+            End If
+        End If
     End Sub
 End Class

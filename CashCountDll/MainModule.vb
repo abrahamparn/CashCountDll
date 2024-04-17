@@ -8,7 +8,7 @@ Module MainModule
     Public MasterMcon As MySqlConnection
     Public isSector As Boolean = True
     Friend a As New IDM.Sector
-    Friend MyKey As String = "0C569782377CC6CD61B07C6869C1DC09"
+    Friend MyKey As String = "EFB1DA1242E6E2F19EDBE4C3E8544896"
     Public Sub Main()
         Try
             If isSector Then
@@ -42,6 +42,8 @@ Module MainModule
             jmlh_fisik_uang_di_toko_idm()
         Catch ex As Exception
             MsgBox(ex.Message)
+            Tracelog(ex.Message)
+
         End Try
     End Sub
 

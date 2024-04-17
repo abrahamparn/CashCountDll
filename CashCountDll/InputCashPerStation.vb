@@ -416,13 +416,70 @@ Public Class InputCashPerStation
                     {Convert.ToInt32(row.Cells(11).Value)}, 
                     {Convert.ToInt32(row.Cells(12).Value)})"
                         command.ExecuteNonQuery()
+
+
+                        command.CommandText = $"INSERT INTO CashPerStationCashCountTotal 
+                    (station, uang_kertas_100k, uang_kertas_75k, uang_kertas_50k, uang_kertas_20k, uang_kertas_10k, uang_kertas_5k, 
+                    uang_kertas_2k, uang_kertas_1k, uang_logam_1000, uang_logam_500, uang_logam_200, uang_logam_100) 
+                    VALUES (
+                    '{row.Cells(0).Value.ToString()}',
+                    {Convert.ToInt32(row.Cells(1).Value) * 100000}, 
+                    {Convert.ToInt32(row.Cells(2).Value) * 75000}, 
+                    {Convert.ToInt32(row.Cells(3).Value) * 50000}, 
+                    {Convert.ToInt32(row.Cells(4).Value) * 20000},
+                    {Convert.ToInt32(row.Cells(5).Value) * 10000}, 
+                    {Convert.ToInt32(row.Cells(6).Value) * 5000}, 
+                    {Convert.ToInt32(row.Cells(7).Value) * 2000}, 
+                    {Convert.ToInt32(row.Cells(8).Value) * 1000}, 
+                    {Convert.ToInt32(row.Cells(9).Value) * 1000}, 
+                    {Convert.ToInt32(row.Cells(10).Value) * 500}, 
+                    {Convert.ToInt32(row.Cells(11).Value) * 200}, 
+                    {Convert.ToInt32(row.Cells(12).Value) * 100})"
+                        command.ExecuteNonQuery()
+
+
+
                     Next
+                    ' To calculate the total of all per station, use this code
+                    '    command.CommandText = $" SELECT station, 
+                    '                    uang_kertas_100k +
+                    '                    uang_kertas_75k +
+                    '                    uang_kertas_50k +
+                    '                    uang_kertas_20k +
+                    '                    uang_kertas_10k +
+                    '                    uang_kertas_5k +
+                    '                    uang_kertas_2k +
+                    '                    uang_kertas_1k +
+                    '                    uang_logam_1000 +
+                    '                    uang_logam_500 +
+                    '                    uang_logam_200 +
+                    '                    uang_logam_100 AS total    FROM CashPerStationCashCountTotal"
+                    '
                 End Using
+
+
 
                 connection.Close()
             End Using
+            userClosing = True ' Set the flag to indicate programmatic closure
+            Me.Close() ' Close the form
         Catch ex As Exception
             Throw New Exception(ex.Message)
         End Try
+    End Sub
+    Private userClosing As Boolean = False
+
+    Private Sub InputCashPerStation_FormClosing(sender As Object, e As FormClosingEventArgs) Handles MyBase.FormClosing
+        If e.CloseReason = CloseReason.UserClosing Then
+            If Not userClosing Then
+                If MessageBox.Show("Are you sure you want to exit the application?", "Exit Application", MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.Yes Then
+                    userClosing = True ' The user has confirmed they want to exit
+                    Application.Exit()
+                Else
+                    e.Cancel = True ' Prevent the form from closing
+                    userClosing = False ' Reset the flag as the closure was canceled
+                End If
+            End If
+        End If
     End Sub
 End Class

@@ -51,6 +51,7 @@ Public Class CashCountClass
             jmlh_fisik_uang_di_toko_idm()
         Catch ex As Exception
             MsgBox(ex.Message)
+            Tracelog(ex.Message)
         End Try
     End Sub
 
@@ -179,6 +180,40 @@ Public Class CashCountClass
                                             createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                                         );"
                     command.ExecuteNonQuery()
+                    command.CommandText = "DROP TABLE IF EXISTS CashPerStationCashCountTotal"
+                    command.ExecuteNonQuery()
+                    command.CommandText = $"
+                                            CREATE TABLE CashPerStationCashCountTotal (
+                                            station VARCHAR(20)  PRIMARY KEY,
+                                            uang_kertas_100k INT NOT NULL,
+                                            uang_kertas_75k INT NOT NULL,
+                                            uang_kertas_50k INT NOT NULL,
+                                            uang_kertas_20k INT NOT NULL,
+                                            uang_kertas_10k INT NOT NULL,
+                                            uang_kertas_5k INT NOT NULL,
+                                            uang_kertas_2k INT NOT NULL,
+                                            uang_kertas_1k INT NOT NULL,
+                                            uang_logam_1000 INT NOT NULL,
+                                            uang_logam_500 INT NOT NULL,
+                                            uang_logam_200 INT NOT NULL,
+                                            uang_logam_100 INT NOT NULL,
+                                            createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                                        );"
+                    command.ExecuteNonQuery()
+
+
+                    command.CommandText = "Show Tables Like 'tracelog_socash'"
+                    If command.ExecuteScalar & "" = "" Then
+                        command.CommandText = $"
+                                              CREATE TABLE tracelog_socash(
+                                                `IDTS` BIGINT(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                                                `TGL` DATETIME,
+                                                `Tipe` VARCHAR(10),
+                                                `log` TEXT,
+                                                `Addid` VARCHAR(50)
+                                                )"
+                        command.ExecuteNonQuery()
+                    End If
 
                 End Using
 
@@ -188,6 +223,28 @@ Public Class CashCountClass
             Throw New Exception(ex.Message)
         End Try
     End Sub
+
+    Public Shared Function Tracelog(data As String)
+        Try
+            Using connection As MySqlConnection = MasterMcon.Clone()
+
+                If connection.State = ConnectionState.Closed Then
+                    connection.Open()
+                End If
+
+                Using command As New MySqlCommand()
+                    command.Connection = connection
+                    command.CommandText = $"INSERT INTO tracelog_socash (`TGL`, `Tipe`, `log`, `Addid`) VALUES ('{Date.Now.ToString("yyyy-MM-dd HH:mm:ss")}', 'nothing', '{data}', 'nothing')"
+                    command.ExecuteNonQuery()
+                End Using
+                connection.Close()
+            End Using
+
+        Catch ex As Exception
+            Throw New Exception(ex.Message)
+        End Try
+    End Function
+
 
     Public Shared Sub jmlh_dana_kas_toko_awal_kasir()
 
@@ -476,11 +533,14 @@ Public Class CashCountClass
 
             If Task.status <> 200 Then
                 MsgBox("Data selisih brankas kosong! Response : " & Task.message)
+                Tracelog("Data selisih brankas kosong! Response : " & Task.message)
                 Exit Function
             End If
 
             If Task.data.Count = 0 Then
                 MsgBox("Data kosong!")
+                Tracelog("Data selisih brankas kosong! Response : ")
+
                 Exit Function
             End If
 
